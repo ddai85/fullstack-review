@@ -13,21 +13,20 @@ class App extends React.Component {
     this.fetch = this.fetch.bind(this);
   }
 
-  fetch () {
+  fetch (username) {
+    this.setState({repos: []});
     var context = this;
     $.ajax({
-      url: 'http://127.0.0.1:1128/repos',
+      url: 'http://127.0.0.1:1128/repos?' + username,
       type: 'GET',
       contentType: 'string',
 
       success: function(data) {
-        console.log('we are getting here...')
         for (var i in data) {
           let result = context.state.repos;
           result.push(data[i])
           context.setState({repos: result});
         }
-        console.log('current repos:', context.state.repos);
       },
       error: function(error) {
         console.log('get request for repos failed', error);
@@ -35,19 +34,19 @@ class App extends React.Component {
     })
   }
 
-  search (term) {
+  search (username) {
     var context = this;
     $.ajax({
-      url: 'http://127.0.0.1:1128/repos?' + term,
+      url: 'http://127.0.0.1:1128/repos?' + username,
       type: 'POST',
       contentType: 'string',
 
       success: function(data) {
-        console.log('ajax call success', data);
-        context.fetch();
+        console.log('ajax post success', data);
+        context.fetch(username);
       },
       error: function(error) {
-        console.log('ajax call failed', error);
+        console.log('ajax post failed', error);
       }
     })
   }
@@ -55,8 +54,8 @@ class App extends React.Component {
   render () {
     return (<div>
       <h1>Github Fetcher</h1>
-      <RepoList repos={this.state.repos}/>
       <Search onSearch={this.search.bind(this)}/>
+      <RepoList repos={this.state.repos}/>
     </div>)
   }
 }

@@ -3,7 +3,7 @@ const token = require('./config')
 const https = require('https');
 const db = require('../database/index');
 
-var gitRequest = function(username) {
+var gitRequest = function(username, cb) {
 
   if (!username) {
   	username = 'ddai85';
@@ -19,19 +19,23 @@ var gitRequest = function(username) {
     }
 	}
 
-  const req = https.get(options, (res) => {
-    console.log('statusCode', res.statusCode);
+  const req = https.get(options, (response) => {
     var buffer = '';
-    res.on('data', (d) => {
+    response.on('data', (d) => {
       buffer += d;
     });
-    res.on('end', () => {
+    response.on('end', () => {
     	repos = JSON.parse(buffer);
-
-    	repos.forEach((repo) => {
+      let length = repos.length;
+    	repos.forEach((repo, index) => {
     		let repoId = repo.id
+    		let lastPushed = repo.pushed_at;
     		let repoString = JSON.stringify(repo);
-    	  db.save(username, repoString, repoId);
+    		let last = false;
+    		if (index === length - 1) {
+    			last = true;
+    		}
+    	  db.save(username, repoString, repoId, lastPushed, last, cb);
     	})
     })
 

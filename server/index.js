@@ -16,10 +16,9 @@ app.post('/repos', function (req, res) {
 
 
   var username = req.url.split('?')[1];
-  
-  gitRequest.gitRequest(username);
+  res.send = res.send.bind(res);
+  gitRequest.gitRequest(username, res.send);
 
-  res.send();
   // TODO - your code here!
   // This route should take the github username provided
   // and get the repo information from the github API, then
@@ -34,16 +33,31 @@ app.get('/', function (req, res) {
 app.get('/repos', function (req, res) {
   // TODO - your code here!
   // This route should send back the top 25 repos
+  var username = req.url.split('?')[1];
+  db.User.find({name: username}).exec((err, data) => {
+    if(err) {
+    	console.log('error on user query', err); 
+    } else {
+      if (data.length === 0) {
+      	res.status(200).send([{name: 'still waiting to download... try again soon!'}]);
+      	return;
+      }
 
-  db.Repo.find().limit(25).exec((err, data) => {
-    if (err) console.log('error on repo query', err);
-    console.log(typeof data);    
-    let result = [];
-    for (var i in data) {
-      result.push(JSON.parse(data[i].repo))
-    }
-  	res.status(200).send(result);
+	    let userId = data[0]._id;
+	    
+	    
+		  db.Repo.find({userId: userId}).limit(25).sort('-lastPushed').exec((err, data) => {
+		    if (err) console.log('error on repo query', err);   
+		    let result = [];
+		    for (var i in data) {
+		      result.push(JSON.parse(data[i].repo))
+		    }
+		  	res.status(200).send(result);
+		  })
+		}
   })
+
+
 
 });
 
